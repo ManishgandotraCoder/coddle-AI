@@ -197,7 +197,10 @@ Performance
 
 
 ## Screenshots
-/Users/ethan/Desktop/Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11.47.51.png /Users/ethan/Desktop/Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11.48.10.png /Users/ethan/Desktop/Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11.48.22.png /Users/ethan/Desktop/Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11.48.29.png
+<img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11 47 51" src="https://github.com/user-attachments/assets/96725b4b-2dde-45ab-bf5c-5a953c3a9be3" />
+<img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11 48 10" src="https://github.com/user-attachments/assets/280dae4c-aa28-4277-9680-02023508e88f" />
+<img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11 48 22" src="https://github.com/user-attachments/assets/31caface-0660-4687-bbfe-29b61cf19bb1" />
+<img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-10 at 11 48 29" src="https://github.com/user-attachments/assets/12c5dfcf-96b6-4797-847a-855d45913e2a" />
 
 
 ## License
