@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, Alert, TextInput } from 'react-native';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useAppStore } from '../store/appStore';
@@ -60,13 +60,76 @@ interface EventDetailModalProps {
 }
 
 const EventDetailModal: React.FC<EventDetailModalProps> = ({ event, visible, onClose }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editNotes, setEditNotes] = useState('');
     const caregivers = useAppStore(state => state.caregivers);
     const conflictResolutions = useAppStore(state => state.conflictResolutions);
+    const deleteEvent = useAppStore(state => state.deleteEvent);
+    const updateEvent = useAppStore(state => state.updateEvent);
+
+    // Reset edit state when event changes
+    useEffect(() => {
+        if (event) {
+            setEditNotes(event.notes || '');
+        }
+        setIsEditing(false);
+    }, [event]);
 
     if (!event) return null;
 
     const caregiver = caregivers.find(c => c.id === event.caregiverId);
     const conflicts = conflictResolutions.filter(c => c.eventId === event.id);
+
+    const handleDeleteEvent = async (eventId: string) => {
+        Alert.alert(
+            'Delete Event',
+            'Are you sure you want to delete this event? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeleting(true);
+                        try {
+                            await deleteEvent(eventId);
+                            onClose();
+                            Alert.alert('Success', 'Event deleted successfully');
+                        } catch (error) {
+                            console.error('Failed to delete event:', error);
+                            Alert.alert('Error', 'Failed to delete event');
+                        } finally {
+                            setIsDeleting(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleEditEvent = async () => {
+        if (!event) return;
+
+        try {
+            await updateEvent(event.id, { notes: editNotes.trim() });
+            setIsEditing(false);
+            Alert.alert('Success', 'Event updated successfully');
+        } catch (error) {
+            console.error('Failed to update event:', error);
+            Alert.alert('Error', 'Failed to update event');
+        }
+    };
+
+    const startEditing = () => {
+        setEditNotes(event?.notes || '');
+        setIsEditing(true);
+    };
+
+    const cancelEditing = () => {
+        setIsEditing(false);
+        setEditNotes('');
+    };
 
     return (
         <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
@@ -109,12 +172,22 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({ event, visible, onC
                         <Text style={styles.detailValue}>{event.lastModifiedBy}</Text>
                     </View>
 
-                    {event.notes && (
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Notes:</Text>
-                            <Text style={styles.detailValue}>{event.notes}</Text>
-                        </View>
-                    )}
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Notes:</Text>
+                        {isEditing ? (
+                            <TextInput
+                                style={styles.editNotesInput}
+                                value={editNotes}
+                                onChangeText={setEditNotes}
+                                placeholder="Add notes..."
+                                multiline
+                                numberOfLines={3}
+                                textAlignVertical="top"
+                            />
+                        ) : (
+                            <Text style={styles.detailValue}>{event.notes || 'No notes'}</Text>
+                        )}
+                    </View>
 
                     {conflicts.length > 0 && (
                         <View style={styles.conflictSection}>
@@ -135,6 +208,43 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({ event, visible, onC
                             ))}
                         </View>
                     )}
+
+                    <View style={styles.actionButtons}>
+                        {isEditing ? (
+                            <>
+                                <TouchableOpacity
+                                    style={styles.saveButton}
+                                    onPress={handleEditEvent}
+                                >
+                                    <Text style={styles.saveButtonText}>Save</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.cancelButton}
+                                    onPress={cancelEditing}
+                                >
+                                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <>
+                                <TouchableOpacity
+                                    style={styles.editButton}
+                                    onPress={startEditing}
+                                >
+                                    <Text style={styles.editButtonText}>✏️ Edit Notes</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.deleteButton, isDeleting && styles.disabledButton]}
+                                    onPress={() => handleDeleteEvent(event.id)}
+                                    disabled={isDeleting}
+                                >
+                                    <Text style={styles.deleteButtonText}>
+                                        {isDeleting ? 'Deleting...' : '🗑️ Delete'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -169,19 +279,22 @@ export const ActivityFeed: React.FC = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Activity Feed</Text>
-            <FlatList
-                data={events}
-                renderItem={renderEvent}
-                keyExtractor={item => item.id}
-                style={styles.list}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={
+            <View style={styles.list}>
+                {events.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyText}>No events yet</Text>
                         <Text style={styles.emptySubtext}>Create your first care event above</Text>
                     </View>
-                }
-            />
+                ) : (
+                    events.map((event) => (
+                        <EventItem
+                            key={event.id}
+                            event={event}
+                            onPress={() => handleEventPress(event)}
+                        />
+                    ))
+                )}
+            </View>
 
             <EventDetailModal
                 event={selectedEvent}
@@ -212,7 +325,7 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     list: {
-        flex: 1,
+        // Remove flex: 1 to allow proper scrolling in parent ScrollView
     },
     eventItem: {
         padding: 16,
@@ -374,5 +487,73 @@ const styles = StyleSheet.create({
     conflictTime: {
         fontSize: 12,
         color: '#9ca3af',
+    },
+    deleteButton: {
+        flex: 1,
+        backgroundColor: '#ef4444',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    deleteButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    disabledButton: {
+        backgroundColor: '#9ca3af',
+        opacity: 0.6,
+    },
+    editNotesInput: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        borderRadius: 6,
+        padding: 8,
+        fontSize: 14,
+        color: '#374151',
+        backgroundColor: '#f9fafb',
+        minHeight: 80,
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 24,
+    },
+    editButton: {
+        flex: 1,
+        backgroundColor: '#3b82f6',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    editButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    saveButton: {
+        flex: 1,
+        backgroundColor: '#10b981',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    saveButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#6b7280',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

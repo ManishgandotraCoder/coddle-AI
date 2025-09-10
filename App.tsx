@@ -3,12 +3,15 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Alert } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from './src/store/appStore';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import HomeScreen from './src/screens/HomeScreen';
+import EventScreen from './src/screens/EventScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { Header } from './src/components/Header';
-import { CaregiverSelector } from './src/components/CaregiverSelector';
-import { EventCreator } from './src/components/EventCreator';
-import { ActivityFeed } from './src/components/ActivityFeed';
-import { SyncStatus } from './src/components/SyncStatus';
-import { ConflictDemo } from './src/components/ConflictDemo';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -36,8 +39,8 @@ export default function App() {
                   console.error('Reset failed:', resetError);
                   Alert.alert('Error', 'Failed to reset the app');
                 }
-              }
-            }
+              },
+            },
           ]
         );
       } finally {
@@ -62,19 +65,25 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="auto" />
-        <Header />
-        <View style={styles.content}>
-          <CaregiverSelector />
-          <SyncStatus />
-          <EventCreator />
-          <ConflictDemo />
-          <ActivityFeed />
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={(screenProps) => ({ header: (headerProps) => <Header {...headerProps} /> })}>
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ title: 'Activity Feed' }}
+        />
+        <Stack.Screen
+          name="Event"
+          component={EventScreen}
+          options={{ title: 'Log Event' }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ title: 'Settings' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -82,10 +91,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,
