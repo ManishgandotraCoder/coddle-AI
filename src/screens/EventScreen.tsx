@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { EventCreator } from '../components/EventCreator';
+
+const EventCreator = React.lazy(() => import('../components/EventCreator').then(m => ({ default: m.EventCreator })));
 
 export default function EventScreen() {
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.container}>
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    <EventCreator />
+                    <Suspense fallback={null}>
+                        <EventCreator />
+                    </Suspense>
                 </ScrollView>
             </SafeAreaView>
         </SafeAreaProvider>

@@ -2,19 +2,17 @@ import React, { Suspense } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-const CaregiverSelector = React.lazy(() => import('../components/CaregiverSelector').then(m => ({ default: m.CaregiverSelector })));
-const ConflictDemo = React.lazy(() => import('../components/ConflictDemo').then(m => ({ default: m.ConflictDemo })));
+const CaregiverSelector = React.lazy(() =>
+    import('../components/CaregiverSelector').then(m => ({ default: m.CaregiverSelector }))
+);
 
-export default function SettingsScreen() {
+export default function ProfileScreen() {
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.container}>
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                     <Suspense fallback={null}>
                         <CaregiverSelector />
-                    </Suspense>
-                    <Suspense fallback={null}>
-                        <ConflictDemo />
                     </Suspense>
                 </ScrollView>
             </SafeAreaView>
